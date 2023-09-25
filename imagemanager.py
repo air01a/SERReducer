@@ -35,6 +35,12 @@ class SerManager:
             self.header.imageWidth=int.from_bytes(f.read(4), byteorder='little')
             self.header.imageHeight=int.from_bytes(f.read(4), byteorder='little')
             self.header.PixelDepthPerPlane=int.from_bytes(f.read(4), byteorder='little')
+            self.header.BitUsed = self.header.PixelDepthPerPlane
+
+            if self.header.PixelDepthPerPlane>8:
+                self.header.PixelDepthPerPlane=16
+
+
             if self.header.PixelDepthPerPlane == 8:
                 self.dtype = uint8
             elif self.header.PixelDepthPerPlane == 16:
@@ -60,10 +66,13 @@ class SerManager:
         self.imgNum+=1
         
         frame = reshape(frame,(self.header.imageHeight,self.header.imageWidth,self.header.numPlanes))
+        if self.header.BitUsed != self.header.PixelDepthPerPlane:
+            frame = (frame* (2 ** self.header.PixelDepthPerPlane)  / (2** self.header.BitUsed)).astype(self.dtype)
+        
         return frame
     
     def int_to_little_indian(self, i):
-        return struct.pack('<Q', i)
+        return struct.pack('<I', i)
     
     def reduce_ser_file(self, output, frames_to_keep):
         with open(self.fname,"rb") as f:
