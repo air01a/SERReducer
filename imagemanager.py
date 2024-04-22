@@ -1,6 +1,7 @@
 import types
 
-from numpy import uint8, uint16,frombuffer,reshape
+from numpy import uint8, uint16,frombuffer,reshape, float32
+from cv2 import cvtColor,COLOR_BAYER_BG2BGR,COLOR_BGR2GRAY,COLOR_BayerBG2BGR, COLOR_BayerGB2BGR,COLOR_BayerGR2BGR,COLOR_BayerRG2BGR, COLOR_RGB2BGR #imshow, waitKey
 
 import struct
 
@@ -52,6 +53,19 @@ class SerManager:
             self.header.dateTime=int.from_bytes(f.read(8), byteorder='little')
             self.imgSizeBytes = int(self.header.imageHeight*self.header.imageWidth*self.header.PixelDepthPerPlane*self.header.numPlanes/8)
             self.imgNum=0
+
+    def get_cv2_convertor(self, color):
+        if color==8:
+            return COLOR_BayerBG2BGR#COLOR_BAYER_BG2BGR
+        elif color==9:
+            return COLOR_BayerGB2BGR
+        elif color==10:
+            return COLOR_BayerGR2BGR
+        elif color==11:
+            return COLOR_BayerRG2BGR
+        elif color==101:
+            return COLOR_RGB2BGR
+        return None 
         
     def get_img(self,imgNum=None):
         if imgNum is None:
@@ -63,12 +77,20 @@ class SerManager:
             f.seek(int(178+self.imgNum*(self.imgSizeBytes)))
             frame = frombuffer(f.read(self.imgSizeBytes),dtype=self.dtype)
             
+
         self.imgNum+=1
         
         frame = reshape(frame,(self.header.imageHeight,self.header.imageWidth,self.header.numPlanes))
         if self.header.BitUsed != self.header.PixelDepthPerPlane:
             frame = (frame* (2 ** self.header.PixelDepthPerPlane)  / (2** self.header.BitUsed)).astype(self.dtype)
         
+        if self.header.colorID>1:
+             COLOR_CONVERTER=self.get_cv2_convertor(self.header.colorID)
+             frame=cvtColor(frame, COLOR_CONVERTER)
+        
+
+        frame = (frame - frame.min())/(frame.max()-frame.min())
+        frame = (frame/frame.max()).astype(float32)
         return frame
     
     def int_to_little_indian(self, i):

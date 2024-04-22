@@ -2,4 +2,4 @@ opencv-python
 astropy
 opencv-python
 scipy
-PySimpleGUI
+git+https://github.com/air01a/PySimpleGUI-4-foss.git

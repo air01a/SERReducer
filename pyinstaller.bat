@@ -1,1 +1,1 @@
-pyinstaller --noconfirm --onefile --windowed --icon "icon.ico" --upx-dir ..\upx-4.1.0-win64 --name SERreducer "main.py"
+pyinstaller --noconfirm --onefile --windowed --icon "icon.ico" --upx-dir ..\upx-4.2.3-win64 --name SERreducer "main.py"

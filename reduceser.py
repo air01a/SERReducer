@@ -5,6 +5,7 @@ from os.path import splitext, isfile, isdir, getsize
 from threading import Thread
 from numpy import empty, append as np_append, flip as np_flip
 
+
 class ReduceSer:
 
     def __init__(self, directory, suffix, subdir, tokeep,percentage, delete, callback,log):
@@ -48,8 +49,9 @@ class ReduceSer:
             try:
                 laplacien = QualityTest.local_contrast_laplace(ser.get_img(i))
             #sobel =  QualityTest.local_constrast_sobel(ser.get_img(i))
-            except:
+            except Exception as e:
                 self.writelog("   Error reading frames", colors='white on red')
+                self.writelog(str(e))
                 return
             
             result=np_append(result,laplacien)
