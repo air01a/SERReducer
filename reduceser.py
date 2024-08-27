@@ -28,7 +28,6 @@ class ReduceSer:
 
     def _reduce_ser(self, path):
         output = splitext(path)[0]+self.suffix+'.ser'
-
         if isfile(output):
             self.writelog("  -- Reduced file exists, skipping", colors="white on black")
             return
@@ -44,10 +43,11 @@ class ReduceSer:
             self.writelog("   error reading SER File", colors='white on red')
             return
         
-        result = empty(1)
+        result = empty(0)
+        ser.reset_ptr()
         for i in range(ser.header.frameCount):
             try:
-                laplacien = QualityTest.local_contrast_laplace(ser.get_img(i))
+                laplacien = QualityTest.local_contrast_laplace(ser.get_img())
             #sobel =  QualityTest.local_constrast_sobel(ser.get_img(i))
             except Exception as e:
                 self.writelog("   Error reading frames", colors='white on red')
@@ -62,7 +62,7 @@ class ReduceSer:
         #print(index[0:200])
 
         if self.percentage:
-            tokeep = int(self.tokeep * ser.header.frameCount)
+            tokeep = int(self.tokeep * ser.header.frameCount / 100)
         else:
             tokeep = self.tokeep
         
@@ -73,11 +73,13 @@ class ReduceSer:
                 ser.reduce_ser_file(output,index[0:tokeep])
             except:
                 self.writelog("   Error writing new ser", colors='white on red')
+                ser.close()
                 return
             
             newsize =getsize(output)/ (1024 ** 3)
             gain = 100-int(newsize/size *100)
             self.writelog("%s reduce to %i frames(initial : %i), gain %i %%" % (path, tokeep,ser.header.frameCount, gain), colors="white on green")
+            ser.close()
             if self.delete:
                 try:
                     remove(path)
