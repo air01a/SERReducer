@@ -47,18 +47,24 @@ class ReduceSer:
         ser.reset_ptr()
         for i in range(ser.header.frameCount):
             try:
-                laplacien = QualityTest.local_contrast_laplace(ser.get_img())
+                img = ser.get_img()
+                if img.size>0:
+                    laplacien = QualityTest.local_contrast_laplace(img)
+                    result=np_append(result,laplacien)
+                else:
+                    result=np_append(result,-1)
             #sobel =  QualityTest.local_constrast_sobel(ser.get_img(i))
             except Exception as e:
                 self.writelog("   Error reading frames", colors='white on red')
                 self.writelog(str(e))
                 return
             
-            result=np_append(result,laplacien)
+            
             if not self.running:
                 return
 
         index = np_flip(result.argsort())
+        print(index)
         #print(index[0:200])
 
         if self.percentage:

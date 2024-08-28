@@ -1,6 +1,6 @@
 import types
 
-from numpy import uint8, uint16,frombuffer,reshape, float32
+from numpy import uint8, uint16,frombuffer,reshape, float32, empty
 from cv2 import cvtColor,COLOR_BAYER_BG2BGR,COLOR_BGR2GRAY,COLOR_BayerBG2BGR, COLOR_BayerGB2BGR,COLOR_BayerGR2BGR,COLOR_BayerRG2BGR, COLOR_RGB2BGR #imshow, waitKey
 
 import struct
@@ -85,11 +85,12 @@ class SerManager:
             self.imgNum=imgNum
             self.f.seek(int(178+self.imgNum*(self.imgSizeBytes)))
 
-            
-        frame = frombuffer(self.f.read(self.imgSizeBytes),dtype=self.dtype)
-            
+        frame = frombuffer(self.f.read(self.imgSizeBytes) ,dtype=self.dtype)
 
         self.imgNum+=1
+        if int(frame.size*self.header.PixelDepthPerPlane/8) < self.imgSizeBytes:
+            print("Size read not correct")
+            return empty(0) 
         
         frame = reshape(frame,(self.header.imageHeight,self.header.imageWidth,self.header.numPlanes))
         if self.header.BitUsed != self.header.PixelDepthPerPlane:
@@ -113,23 +114,25 @@ class SerManager:
         header1 = self.f.read(38)
         self.f.read(4)  #Read framecount that will change according to len(frames_to_keep)
         header2 = self.f.read(136)
-        trailer=[]
+        #trailer=[]
         frames_to_keep.sort()
         with open(output,'wb') as f_out:
             f_out.write(header1)
             f_out.write(self.int_to_little_indian(len(frames_to_keep)))
             f_out.write(header2)
-
             for i in frames_to_keep:
                 ptr = int(178+i*(self.imgSizeBytes))
                 self.f.seek(ptr)
-                img = self.f.read(self.imgSizeBytes)
-                self.f.seek(self.header.frameCount*self.imgSizeBytes+178+4*i)
-                tmp = self.f.read(4)
-                trailer.append(tmp)
-                f_out.write(img)
-            for data in trailer:
-                f_out.write(data)
+
+                f_out.write(self.f.read(self.imgSizeBytes))
+                #print(i, len(img), self.imgSizeBytes)
+                #self.f.seek(self.header.frameCount*self.imgSizeBytes+178+4*i)
+                #tmp = self.f.read(4)
+                #trailer.append(tmp)
+                
+            #f_out.seek(178+len(frames_to_keep)*self.imgSizeBytes)
+            #for data in trailer:
+            #    f_out.write(data)
         
         self.realign()
 
