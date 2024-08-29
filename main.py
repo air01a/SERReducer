@@ -19,7 +19,8 @@ def run():
     #(height,width)=get_window_size()
     layout = get_layout()
     observer = None
-
+    last_percentage=20
+    last_number=200
     window = sg.Window('SER Reducer [easyastro]', layout, finalize=True, element_justification='c',resizable=True,default_element_size=(12, 1))
     callback = CallBack(window)
     while True:
@@ -27,11 +28,18 @@ def run():
 
         if event == sg.WINDOW_CLOSED or event == 'Quitter':
             break
+
         elif event == '-LOGUPDATE-':
             window['-LOG-'].update("\n"+values[event])
         elif event == '-TASKFINISH-':
             window['GO'].update("START")
             reduce_ser = None
+        elif event == '-OPTION_PERCENTAGE-':
+            last_number = values['number']
+            window['number'].update(last_percentage)
+        elif event == '-OPTION_NUMBER-':
+            last_percentage=values['number']
+            window['number'].update(last_number)
 
         elif event == "GO":
             if reduce_ser!=None:

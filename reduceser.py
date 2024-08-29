@@ -64,8 +64,6 @@ class ReduceSer:
                 return
 
         index = np_flip(result.argsort())
-        print(index)
-        #print(index[0:200])
 
         if self.percentage:
             tokeep = int(self.tokeep * ser.header.frameCount / 100)
